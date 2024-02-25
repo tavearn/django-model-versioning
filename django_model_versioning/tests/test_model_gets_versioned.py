@@ -14,6 +14,12 @@ class TestModelGetsVersioned(TestCase):
             percentage_value=12.4
         )
 
+    def test_persisted_field_is_populated(self):
+        tax = Tax.objects.get(id=self.tax.id)
+
+        assert tax._persisted_id is not None, "Persistent field is None"
+        assert tax._persisted_id == tax.id, "Tax._persisted_id should be equal to Tax.id if Tax has not been changed"
+
     # noinspection PyMethodMayBeStatic
     def test_check_model_exists(self):
         assert Tax.objects.count() == 1, "Test object cannot be created"

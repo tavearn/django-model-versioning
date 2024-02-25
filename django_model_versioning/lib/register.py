@@ -2,6 +2,7 @@ from typing import Type, List, Tuple
 
 from django.db.models import Model
 
+from lib.config import Config
 from lib.versioned_model import VersionedModel
 from lib.versioning_options import VersioningOptions
 
@@ -16,11 +17,11 @@ def register(model: Type[Model]):
         persistence_field = options.get_persistence_field(model)
         versioning_class = type(versioning_class_name, (VersionedModel,), {
             "_versioning_options": options,
-            "_persisted_id": persistence_field
+            Config.persisted_field_name: persistence_field
         })
         inject_parent_class(bfr, aft, model, versioning_class)
         # TODO: might not be needed
-        model.add_to_class("_persisted_id", persistence_field)
+        model.add_to_class(Config.persisted_field_name, persistence_field)
         return options
 
     return wrapper
