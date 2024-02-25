@@ -1,4 +1,4 @@
-from typing import Type, TYPE_CHECKING
+from typing import Type, TYPE_CHECKING, Any
 
 from django.db.models import Field
 from django.db.models.signals import post_save
@@ -25,6 +25,9 @@ class VersioningField:
                 post_save.connect(cls.post_save, sender=model)
                 return field
         raise Exception(f"Persistent field not supported for {original_field}")
+
+    def generate_new_version(self, value: Any) -> Any:
+        raise NotImplemented
 
     # noinspection PyUnusedLocal
     @staticmethod
