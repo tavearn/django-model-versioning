@@ -1,2 +1,2 @@
 .idea
-sample_application/config/database_config.py
+django_model_versioning/config/database_config.py

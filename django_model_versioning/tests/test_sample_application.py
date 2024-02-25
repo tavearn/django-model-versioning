@@ -7,6 +7,7 @@ from taxes.models import Tax
 
 class TestSampleApplication(TestCase):
     def setUp(self):
+        x = Tax
         tax = Tax.objects.create(
             name='Food Tax',
             percentage_value=12.4
