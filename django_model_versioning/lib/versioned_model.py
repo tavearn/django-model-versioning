@@ -1,13 +1,18 @@
 from typing import Optional, TYPE_CHECKING
+from uuid import uuid4
 
+from lib.config import Config
 from lib.versioning_options import VersioningOptions
 
 if TYPE_CHECKING:
-    from lib.types import VersionedModelInstance, PersistentFieldInstance
+    from lib.types import VersionedModelInstance, PersistentFieldInstance, VersionedModelType
 
 
 class VersionedModel:
     _versioning_options = None  # type: Optional[VersioningOptions]
+
+    class Meta:
+        abstract = True
 
     def __init__(self, *args, **kwargs):
         super(VersionedModel, self).__init__(*args, **kwargs)
@@ -18,11 +23,17 @@ class VersionedModel:
     def save(self: 'VersionedModelInstance', *args, **kwargs):
         self._django_model_versioning_avoid_signal = kwargs.pop('django_model_versioning_avoid_signal', False)
         if self.versioned_fields_changed():
+            self.archive_original()
             # Set the primary key to None to generate a new model
             if self._meta.pk.attname != self._versioning_options.persistence_key:
                 self.regenerate_persinstance_key()
             setattr(self, self._meta.pk.attname, None)
         super(VersionedModel, self).save(*args, **kwargs)
+
+    def archive_original(self: 'VersionedModelInstance'):
+        original = self.__class__.objects.get(id=self.id)
+        setattr(original, Config.version_field_name, uuid4())
+        original.save()
 
     def regenerate_persinstance_key(self: 'VersionedModelInstance') -> None:
         current_value = getattr(self, self._versioning_options.persistence_key)
@@ -42,7 +53,15 @@ class VersionedModel:
 
     @property
     def versioned_field(self: 'VersionedModelInstance') -> 'PersistentFieldInstance':
-        return self._meta.get_field(self._versioning_options.persistence_key)
+        return self.get_versioned_field()
+
+    @classmethod
+    def get_versioned_field(cls: 'VersionedModelType') -> 'PersistentFieldInstance':
+        return cls._meta.get_field(cls._versioning_options.persistence_key)
+
+    @classmethod
+    def get_persisted_field(cls: 'VersionedModelType') -> 'PersistentFieldInstance':
+        return cls._meta.get_field(Config.persisted_field_name)
 
     @classmethod
     def get_versioning_options(cls) -> VersioningOptions:

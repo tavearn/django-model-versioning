@@ -1,9 +1,11 @@
-from django.test import TestCase
+from django.test import TestCase, TransactionTestCase
 
+from payments.models import Payment
+from products.models import Product
 from taxes.models import Tax
 
 
-class TestModelGetsVersioned(TestCase):
+class TestModelGetsVersioned(TransactionTestCase):
     def __init__(self, *args, **kwargs):
         self.tax = None
         super(TestModelGetsVersioned, self).__init__(*args, **kwargs)
@@ -36,3 +38,29 @@ class TestModelGetsVersioned(TestCase):
         self.tax.save()
 
         assert Tax.objects.count() == 2, "Changing a field marked as `versioned` should generate a new revision"
+
+    def test_models_refer_to_correct_version(self):
+        tax = Tax.objects.get(id=self.tax.id)
+
+        payment = Payment.objects.create(
+            amount=65000,
+            tax=tax
+        )
+
+        product = Product.objects.create(
+            name='Pasta alla Carbonara',
+            price=800,
+            tax=tax
+        )
+
+        self.tax.percentage_value = 13.5
+        self.tax.save()
+
+        # Reload payment
+        payment = Payment.objects.get(id=payment.id)
+
+        # Reload product
+        product = Product.objects.get(id=product.id)
+
+        assert int(payment.tax.percentage_value * 100) == 1240, "Payment should refer to the original model"
+        assert int(product.tax.percentage_value * 100) == 1350, "Product should refer to the new model"

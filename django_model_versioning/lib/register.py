@@ -1,8 +1,10 @@
 from typing import Type, List, Tuple
 
 from django.db.models import Model
+from django.db.models.fields import UUIDField
 
 from lib.config import Config
+from lib.signals import versioning_initialized_signal
 from lib.versioned_model import VersionedModel
 from lib.versioning_options import VersioningOptions
 
@@ -11,17 +13,22 @@ def register(model: Type[Model]):
     def wrapper(options_class: Type[VersioningOptions]):
         # Inject `VersionedModule` within model's bases, right before `Model`
         bfr, aft = split_bases_on_model(*model.__bases__)
-        versioning_class_name = f"{model.__name__}Versioned"
+        # versioning_class_name = f"{model.__name__}Versioned"
 
         options = options_class()
         persistence_field = options.get_persistence_field(model)
-        versioning_class = type(versioning_class_name, (VersionedModel,), {
+        version_field = UUIDField(unique=True, default=None, null=True)
+        versioning_class = type('VersionedModel', (VersionedModel,), {
             "_versioning_options": options,
-            Config.persisted_field_name: persistence_field
+            Config.persisted_field_name: persistence_field,
+            Config.version_field_name: version_field
         })
         inject_parent_class(bfr, aft, model, versioning_class)
         # TODO: might not be needed
         model.add_to_class(Config.persisted_field_name, persistence_field)
+        model.add_to_class(Config.version_field_name, version_field)
+
+        versioning_initialized_signal.send(sender=model)
         return options
 
     return wrapper

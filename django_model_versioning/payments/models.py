@@ -1,4 +1,4 @@
-from django.db.models import Model, IntegerField, ForeignKey, DO_NOTHING, DateTimeField
+from django.db.models import Model, IntegerField, DO_NOTHING, DateTimeField, ForeignKey
 
 from taxes.models import Tax
 
