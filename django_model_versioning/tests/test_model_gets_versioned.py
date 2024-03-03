@@ -1,4 +1,4 @@
-from django.test import TestCase, TransactionTestCase
+from django.test import TransactionTestCase
 
 from payments.models import Payment
 from products.models import Product
@@ -64,3 +64,39 @@ class TestModelGetsVersioned(TransactionTestCase):
 
         assert int(payment.tax.percentage_value * 100) == 1240, "Payment should refer to the original model"
         assert int(product.tax.percentage_value * 100) == 1350, "Product should refer to the new model"
+
+        tax = Tax.objects.get(id=self.tax.id)
+
+        payment2 = Payment.objects.create(
+            amount=65000,
+            tax=tax
+        )
+
+        product2 = Product.objects.create(
+            name='Pasta alla Carbonara',
+            price=800,
+            tax=tax
+        )
+
+        self.tax.percentage_value = 16.1
+        self.tax.save()
+
+        tax = Tax.objects.get(id=self.tax.id)
+
+        payment3 = Payment.objects.create(
+            amount=65000,
+            tax=tax
+        )
+
+        # Reload items
+        payment = Payment.objects.get(id=payment.id)
+        product = Product.objects.get(id=product.id)
+        payment2 = Payment.objects.get(id=payment2.id)
+        product2 = Product.objects.get(id=product2.id)
+        payment3 = Payment.objects.get(id=payment3.id)
+
+        assert int(payment.tax.percentage_value * 100) == 1240, "Payment1 should refer to the original model"
+        assert int(product.tax.percentage_value * 100) == 1610, "Product1 should refer to the new model"
+        assert int(payment2.tax.percentage_value * 100) == 1350, "Payment2 should refer to the previous model"
+        assert int(product2.tax.percentage_value * 100) == 1610, "Product2 should refer to the new model"
+        assert int(payment3.tax.percentage_value * 100) == 1610, "Payment3 should refer to the new model"

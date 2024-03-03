@@ -1,14 +1,46 @@
-from typing import TYPE_CHECKING
+from __future__ import annotations
+from typing import TYPE_CHECKING, Tuple, Union
 
-from django.db.models import ForeignKey, Q
+from django.db.models import ForeignKey, Q, Model
+from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor
+from django.forms import Field
 
 from lib.config import Config
+from lib.versioned_model import VersionedModel
 
 if TYPE_CHECKING:
     from lib.types import VersionedModelType
 
 
+class ForwardVersionedForeignKeyDescriptor(ForwardManyToOneDescriptor):
+    def __set__(self, instance, value):
+        original_value = None
+        try:
+            # We need to trick Django into believing the foreign related field is our persisted_id.
+            # However the setter of the `descriptor_class` only receives the value of the foreign field, not the field
+            # or instance themselves, therefore we need to override the setter of the `forward_related_accessor_class`
+            # This setter is kinda long so it can easily break with future updates, that's why we just override
+            # the self.field.related_fields for this call only
+            original_value = self.field.related_fields
+            self.field.related_fields = [self.replace_related_fields(rhfs, value) for rhfs in self.field.related_fields]
+            super(ForwardVersionedForeignKeyDescriptor, self).__set__(instance, value)
+        finally:
+            if original_value is not None:
+                self.field.related_fields = original_value
+
+    @staticmethod
+    def replace_related_fields(fields: Tuple[Field, Field], value: Model) -> (
+            Tuple)[Union[Field, VersionedForeignKey], Field]:
+        lh_field, rh_field = fields
+        if isinstance(lh_field, VersionedForeignKey) and isinstance(value, VersionedModel):
+            return lh_field, value.persisted_field
+        return lh_field, rh_field
+
+
 class VersionedForeignKey(ForeignKey):
+
+    forward_related_accessor_class = ForwardVersionedForeignKeyDescriptor
+
     # SuperClass is called within a child function
     # noinspection PyMissingConstructor
     def __init__(
@@ -17,6 +49,7 @@ class VersionedForeignKey(ForeignKey):
             *args,
             **kwargs,
     ):
+        # kwargs["to_field"] = Config.persisted_field_name
         self._reference_model = to
         super(VersionedForeignKey, self).__init__(
             to,

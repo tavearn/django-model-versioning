@@ -1,7 +1,7 @@
 from typing import Type, List, Tuple
 
 from django.db.models import Model
-from django.db.models.fields import UUIDField
+from django.db.models.fields import BigIntegerField
 
 from lib.config import Config
 from lib.signals import versioning_initialized_signal
@@ -17,7 +17,7 @@ def register(model: Type[Model]):
 
         options = options_class()
         persistence_field = options.get_persistence_field(model)
-        version_field = UUIDField(unique=True, default=None, null=True)
+        version_field = BigIntegerField(default=None, null=True)
         versioning_class = type('VersionedModel', (VersionedModel,), {
             "_versioning_options": options,
             Config.persisted_field_name: persistence_field,

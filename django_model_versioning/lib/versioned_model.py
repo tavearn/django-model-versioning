@@ -1,5 +1,7 @@
 from typing import Optional, TYPE_CHECKING
-from uuid import uuid4
+
+from django.db import transaction
+from django.db.models import Max
 
 from lib.config import Config
 from lib.versioning_options import VersioningOptions
@@ -32,8 +34,14 @@ class VersionedModel:
 
     def archive_original(self: 'VersionedModelInstance'):
         original = self.__class__.objects.get(id=self.id)
-        setattr(original, Config.version_field_name, uuid4())
-        original.save()
+        # We use transavtion.atomic to avoid race conditions when multiple threads attempt to create a new version
+        # for this model
+        with transaction.atomic():
+            new_attr_value = self.__class__.objects.aggregate(
+                Max(Config.version_field_name)
+            )[f"{Config.version_field_name}__max"] or 0
+            setattr(original, Config.version_field_name, new_attr_value + 1)
+            original.save()
 
     def regenerate_persinstance_key(self: 'VersionedModelInstance') -> None:
         current_value = getattr(self, self._versioning_options.persistence_key)
@@ -54,6 +62,10 @@ class VersionedModel:
     @property
     def versioned_field(self: 'VersionedModelInstance') -> 'PersistentFieldInstance':
         return self.get_versioned_field()
+
+    @property
+    def persisted_field(self: 'VersionedModelInstance') -> 'PersistentFieldInstance':
+        return self.get_persisted_field()
 
     @classmethod
     def get_versioned_field(cls: 'VersionedModelType') -> 'PersistentFieldInstance':
