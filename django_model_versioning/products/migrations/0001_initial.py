@@ -13,6 +13,7 @@ class Migration(migrations.Migration):
         ('taxes', '0001_initial'),
     ]
 
+    # noinspection PyTypeChecker
     operations = [
         migrations.CreateModel(
             name='Product',
@@ -22,7 +23,8 @@ class Migration(migrations.Migration):
                 ('price', models.IntegerField(default=0)),
                 ('created_at', models.DateTimeField(auto_now_add=True)),
                 ('updated_at', models.DateTimeField(auto_now=True)),
-                ('tax', lib.versioned_foreign_key.VersionedForeignKey(on_delete=django.db.models.deletion.DO_NOTHING, to='taxes.tax')),
+                ('tax', lib.versioned_foreign_key.VersionedForeignKey(on_delete=django.db.models.deletion.DO_NOTHING,
+                                                                      to='taxes.tax')),
             ],
         ),
     ]

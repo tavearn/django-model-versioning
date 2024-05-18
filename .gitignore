@@ -1,2 +1,3 @@
 .idea
 django_model_versioning/config/database_config.py
+/dist

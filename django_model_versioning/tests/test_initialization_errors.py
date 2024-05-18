@@ -8,6 +8,7 @@ class TestInitializationErrors(TestCase):
     def test_versioned_model_throws_error_if_only_parent(self):
         has_error = False
         try:
+            # noinspection PyUnusedLocal
             class MyModel(VersionedModel):
                 class Meta:
                     app_label = 'lib'
@@ -25,6 +26,7 @@ class TestInitializationErrors(TestCase):
         has_error = False
 
         try:
+            # noinspection PyUnusedLocal
             class MyModel(VersionedModel, SampleBaseClass):
                 class Meta:
                     app_label = 'lib'
@@ -39,6 +41,7 @@ class TestInitializationErrors(TestCase):
         has_error = False
 
         try:
+            # noinspection PyUnusedLocal
             class MyModel(VersionedModel, Model):
                 class Meta:
                     app_label = 'lib'

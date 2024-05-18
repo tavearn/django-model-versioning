@@ -1,4 +1,4 @@
-from django.db.models import Model, CharField, DateTimeField, DecimalField, UniqueConstraint
+from django.db.models import Model, CharField, DateTimeField, DecimalField
 
 
 class Tax(Model):
