@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "django-model-versioning"
-version = "0.1.0"
+version = "0.1.1"
 description = "A library to version a specific model, with references to specific and/or last version of it"
 authors = ["Emanuele Manfredini <emanuele.manfredini.1992@gmail.com>"]
 license = "GPLv3"
