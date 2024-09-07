@@ -5,11 +5,11 @@ from django.db.models import ForeignKey, Q, Model
 from django.db.models.fields.related_descriptors import ForwardManyToOneDescriptor
 from django.forms import Field
 
-from lib.config import Config
-from lib.versioned_model import VersionedModel
+from .config import Config
+from .versioned_model import VersionedModel
 
 if TYPE_CHECKING:
-    from lib.types import VersionedModelType
+    from .types import VersionedModelType
 
 
 class ForwardVersionedForeignKeyDescriptor(ForwardManyToOneDescriptor):

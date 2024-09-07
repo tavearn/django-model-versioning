@@ -3,11 +3,11 @@ from typing import Optional, TYPE_CHECKING
 from django.db import transaction
 from django.db.models import Max
 
-from lib.config import Config
-from lib.versioning_options import VersioningOptions
+from .config import Config
+from .versioning_options import VersioningOptions
 
 if TYPE_CHECKING:
-    from lib.types import VersionedModelInstance, PersistentFieldInstance, VersionedModelType
+    from .types import VersionedModelInstance, PersistentFieldInstance, VersionedModelType
 
 
 class VersionedModel:

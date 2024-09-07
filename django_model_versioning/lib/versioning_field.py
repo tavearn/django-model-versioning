@@ -8,7 +8,7 @@ from lib.config import Config
 # If this import doesn't happen within TYPE_CHECKING, for some reasons, Django doesn't dectect the
 # new field when generating migrations
 if TYPE_CHECKING:
-    from lib.types import VersionedModelInstance, VersionedModelType
+    from .types import VersionedModelInstance, VersionedModelType
 
 
 class VersioningField:
